@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Change Font",
+  "version": "1.0",
+  "description": "可以自己改你想要的字體",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "48": "icon.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["2.jpg"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
