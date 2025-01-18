@@ -13,7 +13,7 @@ function setCustomStyles() {
   // 初始化CSS规则
   let cssRules = `
     * {
-      font-family: '851tegakizatsu', 'serif' !important;
+      font-family: '851tegakizatsu', 'Cascadia Mono, Menlo, Monaco', 'Courier New', monospace,'serif' !important;
       font-weight: bold !important;
       line-height: 1.5 !important; /* 调整行间距 */
       letter-spacing: 0.5px !important; /* 调整字间距 */
