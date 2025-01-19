@@ -1,0 +1,39 @@
+{
+  "name": "highlight-selected-word",
+  "displayName": "Highlight Selected Word",
+  "description": "Highlights all occurrences of the selected word in the active file.",
+  "version": "1.0.1",
+  "publisher": "hightline",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "highlight-selected-word.activate",
+        "title": "Activate Highlight Selected Word"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vscode-test": "^2.0.0"
+  }
+}
