@@ -33,15 +33,20 @@ function setCustomStyles() {
 
   // 如果是GPT相关页面，设置背景图片
   if (isGPTPage) {
+    // 生成隨機數 1 到 10
+    const randomImageNumber = Math.floor(Math.random() * 12) + 1;
+  
+    // 將隨機數用於背景圖片的 URL
     cssRules += `
       body {
-        background-image: url('chrome-extension://${chrome.runtime.id}/2.jpg') !important;
+        background-image: url('chrome-extension://${chrome.runtime.id}/10.jpg') !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
       }
     `;
   }
+  
   
 
     cssRules += `
