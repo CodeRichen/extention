@@ -39,7 +39,7 @@ function setCustomStyles() {
     // 將隨機數用於背景圖片的 URL
     cssRules += `
       body {
-        background-image: url('chrome-extension://${chrome.runtime.id}/10.jpg') !important;
+        background-image: url('chrome-extension://${chrome.runtime.id}/${randomImageNumber}.jpg') !important;
         background-size: cover !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
