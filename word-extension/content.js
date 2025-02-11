@@ -13,10 +13,11 @@ function setCustomStyles() {
   // 初始化CSS规则
   let cssRules = `
     * {
-      font-family: '851tegakizatsu', 'Cascadia Mono, Menlo, Monaco', 'Courier New', monospace,'serif' !important;
+      font-family: 'Zen Maru Gothic', 'WenQuanYi Bitmap Song 14px';
       font-weight: bold !important;
       line-height: 1.5 !important; /* 调整行间距 */
       letter-spacing: 0.5px !important; /* 调整字间距 */
+      
     }
   `;
 
@@ -24,7 +25,7 @@ function setCustomStyles() {
   if (isYouTube) {
     cssRules += `
       * {
-        color: #41BFB3 !important;
+        // color: #41BFB3 !important;
         // font-size: 16px !important; /* 你可以根据需要调整字体大小 */
       }
     `;
@@ -41,9 +42,8 @@ function setCustomStyles() {
       }
     `;
   }
+  
 
-  // 如果是GPT或YouTube页面，设置选区背景颜色为紫色
-  if (isGPTPage || isYouTube) {
     cssRules += `
       ::selection {
         background-color: purple !important;
@@ -54,7 +54,7 @@ function setCustomStyles() {
         color: white !important;
       }
     `;
-  }
+  
 
   // 应用CSS规则
   style.textContent = cssRules;
