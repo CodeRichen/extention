@@ -1,0 +1,253 @@
+### 檔案名稱: background.js
+-------------------------------------------------
+chrome.action.onClicked.addListener((tab) => {
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['content.js']
+  });
+});
+
+### 檔案名稱: content.js
+-------------------------------------------------
+// content.js
+// 添加CSS規則到頁面
+const style = document.createElement('style');
+document.head.appendChild(style);
+
+// 定義默認設置
+const defaultSettings = {
+  fontFamily: '微軟正黑體',
+  enableBackground: true,
+  backgroundScope: 'gpt', // 'gpt' 或 'all'
+  imageFolder: 'folder1' // 'folder1' 或 'folder2'
+};
+const imageCounts = {
+  miku: 15, 
+  pho: 10
+};
+// 定義函數來設置樣式
+function setCustomStyles(settings) {
+  // 獲取當前頁面信息
+  const isYouTube = window.location.hostname === 'www.youtube.com';
+  const isGPTPage = window.location.hostname.includes('gpt') || window.location.hostname.includes('openai');
+
+  // 初始化CSS規則
+  let cssRules = `
+    * {
+      font-family: '${settings.fontFamily || defaultSettings.fontFamily}' !important;
+    }
+  `;
+
+  // YouTube頁面特殊樣式
+  if (isYouTube) {
+    cssRules += `
+      * {
+        // color: #41BFB3 !important;
+        // font-size: 16px !important;
+      }
+    `;
+  }
+
+  // GPT相關頁面樣式
+  if (isGPTPage && settings.enableBackground) {
+    const randomImageNumber = Math.floor(Math.random() * 15) + 1;
+    cssRules += `
+      body {
+        background-image: url('chrome-extension://${chrome.runtime.id}/miku/wallpaper_${randomImageNumber}.jpg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+      }
+      * {
+        color: rgb(255, 255, 255) !important;
+      }
+    `;
+  } else if (isGPTPage && !settings.enableBackground) {
+    cssRules += `
+      body {
+        background-image: none !important;
+      }
+    `;
+  }
+
+  // 選取文字樣式
+  cssRules += `
+    ::selection {
+      background-color: purple !important;
+      color: white !important;
+    }
+    ::-moz-selection {
+      background-color: purple !important;
+      color: white !important;
+    }
+  `;
+
+  // 應用CSS規則
+  style.textContent = cssRules;
+}
+
+// 從儲存中獲取設置並應用
+function loadAndApplyStyles() {
+  chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
+    const settings = {
+      fontFamily: result.fontFamily || defaultSettings.fontFamily,
+      enableBackground: result.enableBackground !== undefined ? result.enableBackground : defaultSettings.enableBackground
+    };
+    setCustomStyles(settings);
+  });
+}
+
+// 初始載入樣式
+loadAndApplyStyles();
+
+// 監聽儲存變化
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
+    const settings = {
+      fontFamily: result.fontFamily || defaultSettings.fontFamily,
+      enableBackground: result.enableBackground !== undefined ? result.enableBackground : defaultSettings.enableBackground
+    };
+    setCustomStyles(settings);
+  });
+});
+
+### 檔案名稱: popup.html
+-------------------------------------------------
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自訂樣式調整</title>
+    <style>
+        body { width: 250px; padding: 10px; font-family: Arial, sans-serif; }
+        label { font-size: 14px; display: block; margin: 5px 0; }
+        input { width: 70%; vertical-align: middle; }
+        span { margin-left: 5px; }
+        button { margin: 5px 0; width: 100%; padding: 5px; cursor: pointer; }
+        .option-group { margin: 10px 0; }
+        select { width: 100%; padding: 5px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="option-group">
+        <label for="fontSize">字體大小：</label>
+        <input type="range" id="fontSize" min="10" max="40" value="16">
+        <span id="fontSizeValue">16px</span>
+    </div>
+
+    <div class="option-group">
+        <label>選擇字體：</label>
+        <select id="fontFamily">
+            <option value="default">預設</option>
+            <option value="851tegakizatsu">851tegakizatsu</option>
+            <option value="Zen Maru Gothic">Zen Maru Gothic</option>
+            <option value="WenQuanYi Bitmap Song 14px">WenQuanYi Bitmap Song 14px</option>
+            <option value="清松手寫體3">清松手寫體3</option>
+            <option value="'jf open 粉圓 2.1', sans-serif">jf open 粉圓 2.1</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>背景圖片：</label>
+        <select id="backgroundImage">
+            <option value="none">關閉</option>
+            <option value="on">mkiu</option>
+        </select>
+    </div>
+
+    <button id="apply">套用</button>
+
+    <script src="popup.js"></script>
+</body>
+</html>
+
+### 檔案名稱: popup.js
+-------------------------------------------------
+// popup.js
+document.addEventListener('DOMContentLoaded', () => {
+    const fontSizeInput = document.getElementById('fontSize');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const fontFamilySelect = document.getElementById('fontFamily');
+    const backgroundImageSelect = document.getElementById('backgroundImage');
+    const applyButton = document.getElementById('apply');
+
+    // 加載保存的設置
+    chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
+        if (result.fontFamily) {
+            fontFamilySelect.value = result.fontFamily;
+        }
+        if (result.enableBackground !== undefined) {
+            backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
+        }
+    });
+
+    // 更新字體大小顯示
+    fontSizeInput.addEventListener('input', () => {
+        fontSizeValue.textContent = `${fontSizeInput.value}px`;
+    });
+
+    // 套用設定
+    applyButton.addEventListener('click', () => {
+        const fontSize = fontSizeInput.value;
+        const fontFamily = fontFamilySelect.value === 'default' ? '' : fontFamilySelect.value;
+        const enableBackground = backgroundImageSelect.value !== 'none';
+
+        // 保存設置到 chrome.storage
+        chrome.storage.sync.set({
+            fontFamily: fontFamily,
+            enableBackground: enableBackground
+        });
+
+        // 對當前標籤應用字體大小（即時效果）
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.executeScript(tabs[0].id, {
+                code: `
+                    document.body.style.fontSize = '${fontSize}px';
+                `
+            });
+        });
+    });
+});
+
+
+
+### 資料夾結構 ###
+[資料夾] 
+  ├── 1.jpg
+  ├── background.js
+  ├── content.js
+  ├── icon.png
+  ├── manifest.json
+  ├── output.txt
+  ├── popup.html
+  ├── popup.js
+[資料夾] miku
+  ├── downloaded_wallhaven_images.txt
+  ├── wallpaper_1.jpg
+  ├── wallpaper_10.jpg
+  ├── wallpaper_11.jpg
+  ├── wallpaper_12.jpg
+  ├── wallpaper_13.jpg
+  ├── wallpaper_14.jpg
+  ├── wallpaper_15.jpg
+  ├── wallpaper_2.jpg
+  ├── wallpaper_3.jpg
+  ├── wallpaper_4.jpg
+  ├── wallpaper_5.jpg
+  ├── wallpaper_6.jpg
+  ├── wallpaper_7.jpg
+  ├── wallpaper_8.jpg
+  ├── wallpaper_9.jpg
+[資料夾] pho
+  ├── downloaded_pixabay_images.txt
+  ├── wallpaper_1.png
+  ├── wallpaper_10.png
+  ├── wallpaper_2.png
+  ├── wallpaper_3.png
+  ├── wallpaper_4.png
+  ├── wallpaper_5.png
+  ├── wallpaper_6.png
+  ├── wallpaper_7.png
+  ├── wallpaper_8.png
+  ├── wallpaper_9.png圖片改成所以在選取2個不同的資料夾(miku,pho)當中裡面所有圖片來做隨機挑選然後把文字大小的功能刪除背景圖片顯示區域可以選gpt或者是所有網頁

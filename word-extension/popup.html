@@ -7,7 +7,6 @@
     <style>
         body { width: 250px; padding: 10px; font-family: Arial, sans-serif; }
         label { font-size: 14px; display: block; margin: 5px 0; }
-        input { width: 70%; vertical-align: middle; }
         span { margin-left: 5px; }
         button { margin: 5px 0; width: 100%; padding: 5px; cursor: pointer; }
         .option-group { margin: 10px 0; }
@@ -15,12 +14,6 @@
     </style>
 </head>
 <body>
-    <div class="option-group">
-        <label for="fontSize">字體大小：</label>
-        <input type="range" id="fontSize" min="10" max="40" value="16">
-        <span id="fontSizeValue">16px</span>
-    </div>
-
     <div class="option-group">
         <label>選擇字體：</label>
         <select id="fontFamily">
@@ -37,7 +30,23 @@
         <label>背景圖片：</label>
         <select id="backgroundImage">
             <option value="none">關閉</option>
-            <option value="on">mkiu</option>
+            <option value="on">開啟</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>圖片資料夾：</label>
+        <select id="imageFolder">
+            <option value="miku">Miku</option>
+            <option value="pho">Pho</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>背景作用範圍：</label>
+        <select id="backgroundScope">
+            <option value="gpt">僅 GPT 頁面</option>
+            <option value="all">所有網頁</option>
         </select>
     </div>
 
