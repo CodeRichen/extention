@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自訂樣式調整</title>
+    <style>
+        body { width: 250px; padding: 10px; font-family: Arial, sans-serif; }
+        label { font-size: 14px; display: block; margin: 5px 0; }
+        input { width: 70%; vertical-align: middle; }
+        span { margin-left: 5px; }
+        button { margin: 5px 0; width: 100%; padding: 5px; cursor: pointer; }
+        .option-group { margin: 10px 0; }
+        select { width: 100%; padding: 5px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="option-group">
+        <label for="fontSize">字體大小：</label>
+        <input type="range" id="fontSize" min="10" max="40" value="16">
+        <span id="fontSizeValue">16px</span>
+    </div>
+
+    <div class="option-group">
+        <label>選擇字體：</label>
+        <select id="fontFamily">
+            <option value="default">預設</option>
+            <option value="851tegakizatsu">851tegakizatsu</option>
+            <option value="Zen Maru Gothic">Zen Maru Gothic</option>
+            <option value="WenQuanYi Bitmap Song 14px">WenQuanYi Bitmap Song 14px</option>
+            <option value="清松手寫體3">清松手寫體3</option>
+            <option value="'jf open 粉圓 2.1', sans-serif">jf open 粉圓 2.1</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>背景圖片：</label>
+        <select id="backgroundImage">
+            <option value="none">關閉</option>
+            <option value="on">mkiu</option>
+        </select>
+    </div>
+
+    <button id="apply">套用</button>
+
+    <script src="popup.js"></script>
+</body>
+</html>

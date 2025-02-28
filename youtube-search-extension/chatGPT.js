@@ -1,11 +1,12 @@
 // chatGPT.js 
-document.addEventListener('DOMContentLoaded', function() {
+
+document.addEventListener('load', function() {
     // 寻找具有特定id的可编辑<div>标签(失敗)
     const chatGPTInputBox = document.querySelector('div#prompt-textarea');
-  
+    let sendButton = document.querySelector('button:has(svg.icon-2xl)'); // 找到送出按鈕
     if (chatGPTInputBox) {
       chatGPTInputBox.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' && !event.shiftKey) {
+        if (event.key === 'Enter') {
           event.preventDefault();
           // 获取可编辑<div>的文本内容
           const content = chatGPTInputBox.textContent;
@@ -13,18 +14,18 @@ document.addEventListener('DOMContentLoaded', function() {
             chatGPTInputBox.textContent += ' (中文)';
           }
   
-          // 模拟按下Enter键
-          const enterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            keyCode: 13, // Enter键的keyCode是13
-            which: 13, // which属性也用于表示按键代码
-            shiftKey: false,
-            ctrlKey: false,
-            metaKey: false
-          });
+          // setTimeout(() => {
+            
+          //     const chatGPTInputBox = document.querySelector('div#prompt-textarea');            if (searchButton) {
+          //       chatGPTInputBox.click(); // 点击
+          //   } else {
   
-          // 触发事件
-          chatGPTInputBox.dispatchEvent(enterEvent);
+          //     const form = this.closest('form');
+          //     if (form) {
+          //       form.submit();
+          //     }
+          //   }
+          // }, 100); // 延迟100毫秒
         }
       });
     }
