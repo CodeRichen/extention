@@ -10,7 +10,7 @@
     "48": "./1.png",
     "128": "./1.png"
   },
-  "permissions": ["tabs", "scripting"],
+  "permissions": ["tabs", "scripting","activeTab"],
   "content_scripts": [
     {
       "matches": ["*://*/*"],
