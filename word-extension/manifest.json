@@ -23,7 +23,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["miku/*.jpg","photos/*.png"],
+      "resources": ["miku/*.jpg","pho/*.png"],
       "matches": ["<all_urls>"]
     }
   ]
