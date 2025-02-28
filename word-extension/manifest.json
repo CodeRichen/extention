@@ -1,30 +1,33 @@
 {
   "manifest_version": 3,
-  "name": "Change Font",
+  "name": "自訂樣式調整",
   "version": "1.0",
-  "description": "可以自己改你想要的字體",
-  "permissions": ["activeTab", "scripting","storage"],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
-    
-  },
+  "description": "自訂字體與背景圖片",
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "resources": ["miku/*", "pho/*"],
+      "matches": ["<all_urls>"]
     }
   ],
   "icons": {
     "48": "icon.png"
   },
-  "web_accessible_resources": [
+  "content_scripts": [
     {
-      "resources": ["miku/*.jpg","pho/*.png"],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
   ]
 }
