@@ -10,10 +10,19 @@
         span { margin-left: 5px; }
         button { margin: 5px 0; width: 100%; padding: 5px; cursor: pointer; }
         .option-group { margin: 10px 0; }
-        select { width: 100%; padding: 5px; margin-top: 5px; }
+        select, input[type="color"] { width: 100%; padding: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
+    <div class="option-group">
+    <label>自訂文字顏色：</label>
+    <select id="enableFontColor">
+        <option value="off">關閉</option>
+        <option value="on">開啟</option>
+    </select>
+    <input type="color" id="fontColorPicker" value="#ff0000" style="margin-top: 5px;">
+</div>
+
     <div class="option-group">
         <label>選擇字體：</label>
         <select id="fontFamily">
@@ -27,7 +36,7 @@
     </div>
 
     <div class="option-group">
-        <label>背景圖片：</label>
+        <label>啟用自訂樣式（含背景圖片）：</label>
         <select id="backgroundImage">
             <option value="none">關閉</option>
             <option value="on">開啟</option>
@@ -39,15 +48,21 @@
         <select id="imageFolder">
             <option value="miku">Miku</option>
             <option value="pho">Pho</option>
+            <option value="beauty">Beauty</option>
         </select>
     </div>
 
     <div class="option-group">
         <label>背景作用範圍：</label>
         <select id="backgroundScope">
-            <option value="gpt">僅 GPT 頁面</option>
+            <option value="gpt">僅 GPT/Grok 頁面</option>
             <option value="all">所有網頁</option>
         </select>
+    </div>
+
+    <div class="option-group">
+        <label>選取文字背景顏色：</label>
+        <input type="color" id="selectionColor" value="#800080"> <!-- 默認為紫色 -->
     </div>
 
     <button id="apply">套用</button>

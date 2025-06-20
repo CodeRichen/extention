@@ -1,33 +1,30 @@
 {
   "manifest_version": 3,
-  "name": "自訂樣式調整",
+  "name": "Custom Background and Font",
   "version": "1.0",
-  "description": "自訂字體與背景圖片",
-  "permissions": [
-    "storage",
-    "scripting",
-    "activeTab"
-  ],
+  "permissions": ["activeTab", "storage", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
   "background": {
     "service_worker": "background.js"
   },
-  "action": {
-    "default_popup": "popup.html"
-  },
-  "web_accessible_resources": [
+  
+  "content_scripts": [
     {
-      "resources": ["miku/*", "pho/*"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://chatgpt.com/*","https://grok.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
   ],
   "icons": {
     "48": "icon.png"
   },
-  "content_scripts": [
+  "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_end"
+      "resources": ["miku/*", "pho/*", "beauty/*"],
+      "matches": ["https://chatgpt.com/*","https://grok.com/*"]
     }
   ]
 }
