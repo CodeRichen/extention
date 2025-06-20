@@ -7,65 +7,83 @@ chrome.action.onClicked.addListener((tab) => {
   });
 });
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content.js']
+    });
+  }
+});
+
 ### 檔案名稱: content.js
 -------------------------------------------------
-// content.js
-// 添加CSS規則到頁面
-const style = document.createElement('style');
+const style = document.createElement('style'); 
 document.head.appendChild(style);
 
 // 定義默認設置
 const defaultSettings = {
   fontFamily: '微軟正黑體',
   enableBackground: true,
-  backgroundScope: 'gpt', // 'gpt' 或 'all'
-  imageFolder: 'folder1' // 'folder1' 或 'folder2'
+  backgroundScope: 'gpt',
+  imageFolder: 'miku',
+  selectionColor: 'purple'
 };
 const imageCounts = {
-  miku: 15, 
-  pho: 10
+  miku: 15,
+  pho: 10,
+  beauty: 3700
 };
-// 定義函數來設置樣式
-function setCustomStyles(settings) {
-  // 獲取當前頁面信息
-  const isYouTube = window.location.hostname === 'www.youtube.com';
-  const isGPTPage = window.location.hostname.includes('gpt') || window.location.hostname.includes('openai');
 
-  // 初始化CSS規則
-  let cssRules = `
+// 用於儲存一致的背景圖片編號
+let consistentImageNumber = null;
+
+// 設置樣式
+function setCustomStyles(settings) {
+  const isGPTPage = window.location.hostname.includes('gpt') || window.location.hostname.includes('openai');
+  const isGrokPage = window.location.hostname.includes('grok');
+  const applyToAll = settings.backgroundScope === 'all';
+  let cssRules = '';
+
+  // 如果關閉背景與所有樣式，自動還原為預設字體與樣式
+if (!settings.enableBackground) {
+  style.textContent = `
+    /* 還原背景 */
+    body {
+      background: none !important;
+    }
+
+    /* 還原字體 */
     * {
-      font-family: '${settings.fontFamily || defaultSettings.fontFamily}' !important;
+      font-family: default,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Liberation Sans", Arial, sans-serif !important;
+    }
+
+    /* 移除你注入的選取樣式，不要強制背景色 */
+    ::selection,
+    ::-moz-selection {
+      background-color: initial !important;
     }
   `;
+  return;
+}
 
-  // YouTube頁面特殊樣式
-  if (isYouTube) {
+
+  // ----------- 以下是開啟背景時的處理 --------------
+
+// 套用文字顏色（如果開啟了）
+if (settings.enableFontColor) {
+  cssRules += `
+    * {
+      color: ${settings.fontColor} !important;
+    }
+  `;
+}
+
+  // 字體設置（除非是 default）
+  if (settings.fontFamily && settings.fontFamily !== 'default') {
     cssRules += `
       * {
-        // color: #41BFB3 !important;
-        // font-size: 16px !important;
-      }
-    `;
-  }
-
-  // GPT相關頁面樣式
-  if (isGPTPage && settings.enableBackground) {
-    const randomImageNumber = Math.floor(Math.random() * 15) + 1;
-    cssRules += `
-      body {
-        background-image: url('chrome-extension://${chrome.runtime.id}/miku/wallpaper_${randomImageNumber}.jpg') !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-      }
-      * {
-        color: rgb(255, 255, 255) !important;
-      }
-    `;
-  } else if (isGPTPage && !settings.enableBackground) {
-    cssRules += `
-      body {
-        background-image: none !important;
+        font-family: '${settings.fontFamily}', sans-serif !important;
       }
     `;
   }
@@ -73,28 +91,69 @@ function setCustomStyles(settings) {
   // 選取文字樣式
   cssRules += `
     ::selection {
-      background-color: purple !important;
-      color: white !important;
+      background-color: ${settings.selectionColor || defaultSettings.selectionColor} !important;
     }
     ::-moz-selection {
-      background-color: purple !important;
-      color: white !important;
+      background-color: ${settings.selectionColor || defaultSettings.selectionColor} !important;
     }
   `;
 
-  // 應用CSS規則
+  // 背景圖片設置
+  if (applyToAll || isGPTPage || isGrokPage) {
+    const folder = settings.imageFolder || defaultSettings.imageFolder;
+    const maxImages = imageCounts[folder];
+    let randomImageNumber;
+
+    if (applyToAll) {
+      if (consistentImageNumber === null) {
+        consistentImageNumber = folder === 'beauty' 
+          ? Math.floor(Math.random() * maxImages) + 400 
+          : Math.floor(Math.random() * maxImages) + 1;
+      }
+      randomImageNumber = consistentImageNumber;
+    } else {
+      randomImageNumber = folder === 'beauty' 
+        ? Math.floor(Math.random() * maxImages) + 400 
+        : Math.floor(Math.random() * maxImages) + 1;
+    }
+
+    const extension = folder === 'pho' ? 'png' : 'jpg';
+    cssRules += `
+      body {
+        background-image: url('chrome-extension://${chrome.runtime.id}/${folder}/wallpaper_${randomImageNumber}.${extension}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+      }
+    `;
+  }
+
   style.textContent = cssRules;
 }
 
 // 從儲存中獲取設置並應用
 function loadAndApplyStyles() {
-  chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
-    const settings = {
-      fontFamily: result.fontFamily || defaultSettings.fontFamily,
-      enableBackground: result.enableBackground !== undefined ? result.enableBackground : defaultSettings.enableBackground
-    };
-    setCustomStyles(settings);
-  });
+chrome.storage.sync.get([
+  'fontFamily',
+  'enableBackground',
+  'backgroundScope',
+  'imageFolder',
+  'selectionColor',
+  'enableFontColor',
+  'fontColor'
+], (result) => {
+  const settings = {
+    fontFamily: result.fontFamily || defaultSettings.fontFamily,
+    enableBackground: result.enableBackground !== undefined ? result.enableBackground : defaultSettings.enableBackground,
+    backgroundScope: result.backgroundScope || defaultSettings.backgroundScope,
+    imageFolder: result.imageFolder || defaultSettings.imageFolder,
+    selectionColor: result.selectionColor || defaultSettings.selectionColor,
+    enableFontColor: result.enableFontColor || false,
+    fontColor: result.fontColor || '#ffffff'
+  };
+  setCustomStyles(settings);
+});
+
 }
 
 // 初始載入樣式
@@ -102,13 +161,10 @@ loadAndApplyStyles();
 
 // 監聽儲存變化
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
-    const settings = {
-      fontFamily: result.fontFamily || defaultSettings.fontFamily,
-      enableBackground: result.enableBackground !== undefined ? result.enableBackground : defaultSettings.enableBackground
-    };
-    setCustomStyles(settings);
-  });
+  if (changes.backgroundScope || changes.imageFolder) {
+    consistentImageNumber = null; // 重置一致性編號
+  }
+  loadAndApplyStyles();
 });
 
 ### 檔案名稱: popup.html
@@ -122,19 +178,21 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     <style>
         body { width: 250px; padding: 10px; font-family: Arial, sans-serif; }
         label { font-size: 14px; display: block; margin: 5px 0; }
-        input { width: 70%; vertical-align: middle; }
         span { margin-left: 5px; }
         button { margin: 5px 0; width: 100%; padding: 5px; cursor: pointer; }
         .option-group { margin: 10px 0; }
-        select { width: 100%; padding: 5px; margin-top: 5px; }
+        select, input[type="color"] { width: 100%; padding: 5px; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="option-group">
-        <label for="fontSize">字體大小：</label>
-        <input type="range" id="fontSize" min="10" max="40" value="16">
-        <span id="fontSizeValue">16px</span>
-    </div>
+    <label>自訂文字顏色：</label>
+    <select id="enableFontColor">
+        <option value="off">關閉</option>
+        <option value="on">開啟</option>
+    </select>
+    <input type="color" id="fontColorPicker" value="#ff0000" style="margin-top: 5px;">
+</div>
 
     <div class="option-group">
         <label>選擇字體：</label>
@@ -149,11 +207,33 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     </div>
 
     <div class="option-group">
-        <label>背景圖片：</label>
+        <label>啟用自訂樣式（含背景圖片）：</label>
         <select id="backgroundImage">
             <option value="none">關閉</option>
-            <option value="on">mkiu</option>
+            <option value="on">開啟</option>
         </select>
+    </div>
+
+    <div class="option-group">
+        <label>圖片資料夾：</label>
+        <select id="imageFolder">
+            <option value="miku">Miku</option>
+            <option value="pho">Pho</option>
+            <option value="beauty">Beauty</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>背景作用範圍：</label>
+        <select id="backgroundScope">
+            <option value="gpt">僅 GPT/Grok 頁面</option>
+            <option value="all">所有網頁</option>
+        </select>
+    </div>
+
+    <div class="option-group">
+        <label>選取文字背景顏色：</label>
+        <input type="color" id="selectionColor" value="#800080"> <!-- 默認為紫色 -->
     </div>
 
     <button id="apply">套用</button>
@@ -164,48 +244,56 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 ### 檔案名稱: popup.js
 -------------------------------------------------
-// popup.js
 document.addEventListener('DOMContentLoaded', () => {
-    const fontSizeInput = document.getElementById('fontSize');
-    const fontSizeValue = document.getElementById('fontSizeValue');
     const fontFamilySelect = document.getElementById('fontFamily');
     const backgroundImageSelect = document.getElementById('backgroundImage');
+    const imageFolderSelect = document.getElementById('imageFolder');
+    const backgroundScopeSelect = document.getElementById('backgroundScope');
+    const selectionColorInput = document.getElementById('selectionColor');
     const applyButton = document.getElementById('apply');
-
+    const enableFontColor = document.getElementById('enableFontColor').value === 'on';
+    const fontColorPicker = document.getElementById('fontColorPicker');
     // 加載保存的設置
-    chrome.storage.sync.get(['fontFamily', 'enableBackground'], (result) => {
-        if (result.fontFamily) {
-            fontFamilySelect.value = result.fontFamily;
-        }
-        if (result.enableBackground !== undefined) {
-            backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
-        }
-    });
+chrome.storage.sync.get([
+    'fontFamily',
+    'enableBackground',
+    'imageFolder',
+    'backgroundScope',
+    'selectionColor',
+    'enableFontColor',
+    'fontColor'
+], (result) => {
+    fontFamilySelect.value = result.fontFamily || 'default';
+    backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
+    imageFolderSelect.value = result.imageFolder || 'miku';
+    backgroundScopeSelect.value = result.backgroundScope || 'gpt';
+    selectionColorInput.value = result.selectionColor || '#800080';
 
-    // 更新字體大小顯示
-    fontSizeInput.addEventListener('input', () => {
-        fontSizeValue.textContent = `${fontSizeInput.value}px`;
-    });
+    document.getElementById('enableFontColor').value = result.enableFontColor ? 'on' : 'off';
+    fontColorPicker.style.display = result.enableFontColor ? 'block' : 'none';
+    fontColorPicker.value = result.fontColor || '#ffffff';
+});
+
 
     // 套用設定
     applyButton.addEventListener('click', () => {
-        const fontSize = fontSizeInput.value;
-        const fontFamily = fontFamilySelect.value === 'default' ? '' : fontFamilySelect.value;
-        const enableBackground = backgroundImageSelect.value !== 'none';
-
-        // 保存設置到 chrome.storage
+        const fontFamily = fontFamilySelect.value;
+        const enableBackground = backgroundImageSelect.value === 'on';
+        const imageFolder = imageFolderSelect.value;
+        const backgroundScope = backgroundScopeSelect.value;
+        const selectionColor = selectionColorInput.value;
+        const enableFontColor = document.getElementById('enableFontColor').value === 'on';
+        const fontColor = fontColorPicker.value;
         chrome.storage.sync.set({
             fontFamily: fontFamily,
-            enableBackground: enableBackground
-        });
-
-        // 對當前標籤應用字體大小（即時效果）
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            chrome.tabs.executeScript(tabs[0].id, {
-                code: `
-                    document.body.style.fontSize = '${fontSize}px';
-                `
-            });
+            enableBackground: enableBackground,
+            imageFolder: imageFolder,
+            backgroundScope: backgroundScope,
+            selectionColor: selectionColor,
+            enableFontColor: enableFontColor,
+            fontColor: fontColor
+        }, () => {
+            console.log('設置已保存');
         });
     });
 });
@@ -250,4 +338,5 @@ document.addEventListener('DOMContentLoaded', () => {
   ├── wallpaper_6.png
   ├── wallpaper_7.png
   ├── wallpaper_8.png
-  ├── wallpaper_9.png圖片改成所以在選取2個不同的資料夾(miku,pho)當中裡面所有圖片來做隨機挑選然後把文字大小的功能刪除背景圖片顯示區域可以選gpt或者是所有網頁
+  ├── wallpaper_9.png
+加入功能:更改Google上面分頁和書籤那邊的背景圖片

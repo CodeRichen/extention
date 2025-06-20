@@ -1,32 +1,53 @@
-// popup.js
 document.addEventListener('DOMContentLoaded', () => {
     const fontFamilySelect = document.getElementById('fontFamily');
     const backgroundImageSelect = document.getElementById('backgroundImage');
     const imageFolderSelect = document.getElementById('imageFolder');
     const backgroundScopeSelect = document.getElementById('backgroundScope');
+    const selectionColorInput = document.getElementById('selectionColor');
     const applyButton = document.getElementById('apply');
-
+    const enableFontColor = document.getElementById('enableFontColor').value === 'on';
+    const fontColorPicker = document.getElementById('fontColorPicker');
     // 加載保存的設置
-    chrome.storage.sync.get(['fontFamily', 'enableBackground', 'imageFolder', 'backgroundScope'], (result) => {
-        if (result.fontFamily) fontFamilySelect.value = result.fontFamily;
-        if (result.enableBackground !== undefined) backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
-        if (result.imageFolder) imageFolderSelect.value = result.imageFolder;
-        if (result.backgroundScope) backgroundScopeSelect.value = result.backgroundScope;
-    });
+chrome.storage.sync.get([
+    'fontFamily',
+    'enableBackground',
+    'imageFolder',
+    'backgroundScope',
+    'selectionColor',
+    'enableFontColor',
+    'fontColor'
+], (result) => {
+    fontFamilySelect.value = result.fontFamily || 'default';
+    backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
+    imageFolderSelect.value = result.imageFolder || 'miku';
+    backgroundScopeSelect.value = result.backgroundScope || 'gpt';
+    selectionColorInput.value = result.selectionColor || '#800080';
+
+    document.getElementById('enableFontColor').value = result.enableFontColor ? 'on' : 'off';
+    fontColorPicker.style.display = result.enableFontColor ? 'block' : 'none';
+    fontColorPicker.value = result.fontColor || '#ffffff';
+});
+
 
     // 套用設定
     applyButton.addEventListener('click', () => {
-        const fontFamily = fontFamilySelect.value === 'default' ? '' : fontFamilySelect.value;
-        const enableBackground = backgroundImageSelect.value !== 'none';
+        const fontFamily = fontFamilySelect.value;
+        const enableBackground = backgroundImageSelect.value === 'on';
         const imageFolder = imageFolderSelect.value;
         const backgroundScope = backgroundScopeSelect.value;
-
-        // 保存設置到 chrome.storage
+        const selectionColor = selectionColorInput.value;
+        const enableFontColor = document.getElementById('enableFontColor').value === 'on';
+        const fontColor = fontColorPicker.value;
         chrome.storage.sync.set({
             fontFamily: fontFamily,
             enableBackground: enableBackground,
             imageFolder: imageFolder,
-            backgroundScope: backgroundScope
+            backgroundScope: backgroundScope,
+            selectionColor: selectionColor,
+            enableFontColor: enableFontColor,
+            fontColor: fontColor
+        }, () => {
+            console.log('設置已保存');
         });
     });
 });

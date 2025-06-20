@@ -1,0 +1,4 @@
+# 忽略 miku 和 pho 資料夾中的圖片
+miku/*.jpg
+pho/*.png
+beauty/*.jpg
