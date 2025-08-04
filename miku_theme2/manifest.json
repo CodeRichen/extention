@@ -1,0 +1,101 @@
+{
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "miku2",
+  "theme": {
+    "images": {
+      "theme_frame_overlay": "theme_frame_overlay.png",
+      "theme_ntp_attribution": "theme_ntp_attribution.png",
+      "theme_window_control_background": "theme_window_control_background.png",
+      "theme_frame": "theme_frame.png",
+      "theme_toolbar": "theme_toolbar.png",
+      "theme_tab_background": "theme_tab_background.png",
+      "theme_button_background": "theme_button_background.png",
+      "theme_ntp_background": "theme_ntp_background.png"
+    },
+    "colors": {
+      "frame": [
+        211,
+        227,
+        253
+      ],
+      "ntp_background": [
+        255,
+        255,
+        255
+      ],
+      "tab_text": [
+        110,
+        110,
+        110
+      ],
+      "tab_background_text": [
+        71,
+        71,
+        71
+      ],
+      "bookmark_text": [
+        156,
+        232,
+        255
+      ],
+      "ntp_text": [
+        169,
+        245,
+        241
+      ],
+      "ntp_link": [
+        6,
+        55,
+        116
+      ],
+      "ntp_header": [
+        94,
+        247,
+        255
+      ],
+      "toolbar": [
+        255,
+        255,
+        255
+      ],
+      "toolbar_text": [
+        158,
+        245,
+        255
+      ],
+      "button_background": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "omnibox_background": [
+        90,
+        188,
+        196
+      ],
+      "omnibox_text": [
+        110,
+        248,
+        255
+      ],
+      "toolbar_button_icon": [
+        115,
+        250,
+        250
+      ]
+    },
+    "tints": {
+      "buttons": [
+        0.5361111111111111,
+        0.58,
+        0.79
+      ]
+    },
+    "properties": {
+      "ntp_background_alignment": "center",
+      "ntp_background_repeat": "no-repeat"
+    }
+  }
+}
