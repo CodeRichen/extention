@@ -1,0 +1,81 @@
+{
+  "manifest_version": 3,
+  "version": "1.0.0",
+  "name": "miku",
+  "theme": {
+    "images": {
+      "theme_ntp_background": "theme_ntp_background.png",
+      "theme_toolbar": "theme_toolbar.png",
+      "theme_frame": "theme_frame.png",
+      "theme_tab_background": "theme_tab_background.png"
+    },
+    "colors": {
+      "frame": [
+        85,
+        185,
+        207
+      ],
+      "ntp_background": [
+        55,
+        101,
+        174
+      ],
+      "tab_text": [
+        19,
+        19,
+        33
+      ],
+      "tab_background_text": [
+        19,
+        19,
+        33
+      ],
+      "bookmark_text": [
+        19,
+        19,
+        33
+      ],
+      "ntp_text": [
+        204,
+        192,
+        197
+      ],
+      "ntp_link": [
+        6,
+        55,
+        116
+      ],
+      "ntp_header": [
+        150,
+        150,
+        150
+      ],
+      "toolbar": [
+        204,
+        192,
+        197
+      ],
+      "toolbar_text": [
+        19,
+        19,
+        33
+      ],
+      "button_background": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "toolbar_button_icon": [
+        19,
+        19,
+        33
+      ]
+    },
+    "tints": {},
+    "properties": {
+      "ntp_background_alignment": "center top",
+      "ntp_background_repeat": "no-repeat"
+    }
+  }
+}
