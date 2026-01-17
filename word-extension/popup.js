@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundScopeSelect = document.getElementById('backgroundScope');
     const selectionColorInput = document.getElementById('selectionColor');
     const applyButton = document.getElementById('apply');
+    const currentImageEl = document.getElementById('currentImage');
     const enableFontColor = document.getElementById('enableFontColor').value === 'on';
     const fontColorPicker = document.getElementById('fontColorPicker');
     // 加載保存的設置
@@ -15,7 +16,8 @@ chrome.storage.sync.get([
     'backgroundScope',
     'selectionColor',
     'enableFontColor',
-    'fontColor'
+    'fontColor',
+    'currentBackgroundName'
 ], (result) => {
     fontFamilySelect.value = result.fontFamily || 'default';
     backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
@@ -26,6 +28,11 @@ chrome.storage.sync.get([
     document.getElementById('enableFontColor').value = result.enableFontColor ? 'on' : 'off';
     fontColorPicker.style.display = result.enableFontColor ? 'block' : 'none';
     fontColorPicker.value = result.fontColor || '#ffffff';
+
+    if (currentImageEl) {
+        const name = result.currentBackgroundName || '';
+        currentImageEl.textContent = name ? `目前背景：${name}` : '目前背景：無';
+    }
 });
 
 
@@ -52,5 +59,11 @@ chrome.storage.sync.get([
         }, () => {
             console.log('設置已保存');
         });
+    });
+
+    chrome.storage.onChanged.addListener((changes) => {
+        if (!currentImageEl || !changes.currentBackgroundName) return;
+        const name = changes.currentBackgroundName.newValue || '';
+        currentImageEl.textContent = name ? `目前背景：${name}` : '目前背景：無';
     });
 });

@@ -57,6 +57,7 @@ if (!settings.enableBackground) {
       background-color: initial !important;
     }
   `;
+  chrome.storage.sync.set({ currentBackgroundName: '' });
   return;
 }
 
@@ -72,13 +73,55 @@ if (settings.enableFontColor) {
   `;
 }
 
-  // 字體設置（除非是 default 或在 Gemini 頁面）
-  if (settings.fontFamily && settings.fontFamily !== 'default' && !isGeminiPage) {
+// 字體設置 (針對 Gemini 深度優化版)
+  if (settings.fontFamily && settings.fontFamily !== 'default' ) {
     cssRules += `
-      * {
+      /* 1. 基礎文字標籤套用字體，避免使用萬用字元 * */
+      body, p, div, span, a, li, input, textarea, button:not([class*="icon"]):not(.google-symbols) {
         font-family: '${settings.fontFamily}', sans-serif !important;
       }
+      
+      /* 2. 核心排除：保護所有可能包含圖示的組件 */
+      .google-symbols,
+      .material-symbols-outlined,
+      .mat-icon,
+      .material-icons,
+      [data-mat-icon-name],
+      [fonticon],
+      mat-icon {
+        /* 強制將圖示字體拉回最優先 */
+        font-family: 'Google Symbols', 'Material Symbols Outlined', 'Material Icons' !important;
+        
+        /* 下面這些是確保 'mic' 變成圖示的關鍵渲染指令 */
+        font-weight: normal !important;
+        font-style: normal !important;
+        line-height: 1 !important;
+        letter-spacing: normal !important;
+        text-transform: none !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        direction: ltr !important;
+        -webkit-font-feature-settings: 'liga' !important;
+        font-feature-settings: 'liga' !important;
+      }
+
+      /* 3. 針對 Gemini 麥克風按鈕的特殊修正 */
+      mat-icon[data-mat-icon-name="mic"], 
+      mat-icon[fonticon="mic"] {
+        font-family: 'Google Symbols' !important;
+      }
     `;
+    cssRules += `
+
+        /* 2. 移除底部免責聲明容器 */
+        hallucination-disclaimer,
+        .hallucination-disclaimer,
+        .capabilities-disclaimer,
+        footer {
+          display: none !important;
+        }
+      `;
   }
 
   // 選取文字樣式
@@ -122,6 +165,7 @@ if (settings.enableFontColor) {
             background-repeat: no-repeat !important;
           }
         `;
+        chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomImage}` });
       }
     }
     
@@ -312,6 +356,10 @@ loadAndApplyStyles();
 
 // 監聽儲存變化(包含時間戳變化)
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  // 任何設定變化都會重新載入並產生新圖片
+  // 只更新目前背景名稱時，不重新載入，避免無限刷新
+  if (changes.currentBackgroundName && Object.keys(changes).length === 1) {
+    return;
+  }
+  // 其他設定變化重新載入
   loadAndApplyStyles();
 });
