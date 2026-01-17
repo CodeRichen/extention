@@ -20,7 +20,7 @@ chrome.storage.sync.get([
     fontFamilySelect.value = result.fontFamily || 'default';
     backgroundImageSelect.value = result.enableBackground ? 'on' : 'none';
     imageFolderSelect.value = result.imageFolder || 'miku';
-    backgroundScopeSelect.value = result.backgroundScope || 'gpt';
+    backgroundScopeSelect.value = result.backgroundScope || 'ai';
     selectionColorInput.value = result.selectionColor || '#800080';
 
     document.getElementById('enableFontColor').value = result.enableFontColor ? 'on' : 'off';
@@ -38,6 +38,8 @@ chrome.storage.sync.get([
         const selectionColor = selectionColorInput.value;
         const enableFontColor = document.getElementById('enableFontColor').value === 'on';
         const fontColor = fontColorPicker.value;
+        
+        // 添加時間戳，確保每次套用都會觸發更新
         chrome.storage.sync.set({
             fontFamily: fontFamily,
             enableBackground: enableBackground,
@@ -45,7 +47,8 @@ chrome.storage.sync.get([
             backgroundScope: backgroundScope,
             selectionColor: selectionColor,
             enableFontColor: enableFontColor,
-            fontColor: fontColor
+            fontColor: fontColor,
+            updateTimestamp: Date.now() // 每次套用都更新時間戳
         }, () => {
             console.log('設置已保存');
         });

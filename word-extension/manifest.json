@@ -13,7 +13,7 @@
   
   "content_scripts": [
     {
-      "matches": ["https://chatgpt.com/*","https://grok.com/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_end"
     }
@@ -23,8 +23,8 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["miku/*", "pho/*", "beauty/*"],
-      "matches": ["https://chatgpt.com/*","https://grok.com/*"]
+      "resources": ["miku/*", "pho/*", "beauty/*", "image-list.json"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
