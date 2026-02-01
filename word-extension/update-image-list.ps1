@@ -1,4 +1,4 @@
-﻿# Auto Update Image List Script
+﻿# powershell -ExecutionPolicy Bypass -File "%~dp0update-image-list.ps1"
 # Run this script to scan image folders and update image-list.json
 
 Write-Host "Scanning image folders..." -ForegroundColor Cyan
