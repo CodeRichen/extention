@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentImageEl = document.getElementById('currentImage');
     const enableFontColor = document.getElementById('enableFontColor').value === 'on';
     const fontColorPicker = document.getElementById('fontColorPicker');
+    const heartButton = document.getElementById('heartButton');
     // 加載保存的設置
 chrome.storage.sync.get([
     'fontFamily',
@@ -58,6 +59,50 @@ chrome.storage.sync.get([
             updateTimestamp: Date.now() // 每次套用都更新時間戳
         }, () => {
             console.log('設置已保存');
+        });
+    });
+
+    // 愛心按鈕事件監聽器
+    heartButton.addEventListener('click', () => {
+        chrome.storage.sync.get(['currentBackgroundName'], (result) => {
+            const backgroundName = result.currentBackgroundName || '';
+            
+            if (backgroundName) {
+                // 獲取當前時間
+                const now = new Date();
+                const timestamp = now.toISOString().replace(/[:.]/g, '-');
+                const dateString = now.toLocaleDateString('zh-TW') + ' ' + now.toLocaleTimeString('zh-TW');
+                
+                // 創建記錄內容
+                const record = `${dateString} - ${backgroundName}\n`;
+                
+                // 將記錄添加到本地文件
+                chrome.storage.local.get(['favoriteBackgrounds'], (result) => {
+                    const favorites = result.favoriteBackgrounds || '';
+                    const updatedFavorites = favorites + record;
+                    
+                    chrome.storage.local.set({
+                        favoriteBackgrounds: updatedFavorites
+                    }, () => {
+                        console.log('背景已收藏:', backgroundName);
+                        
+                        // 下載文件到本地
+                        const blob = new Blob([updatedFavorites], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        chrome.downloads.download({
+                            url: url,
+                            filename: 'favorite_backgrounds.txt',
+                            conflictAction: 'overwrite'
+                        }, () => {
+                            URL.revokeObjectURL(url);
+                            alert('背景已收藏！');
+                        });
+                    });
+                });
+            } else {
+                alert('目前沒有背景可以收藏');
+            }
         });
     });
 

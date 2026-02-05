@@ -43,6 +43,16 @@
             color: #cfcfcf;
             word-break: break-all;
         }
+        .heart-button {
+            background-color: #d63384;
+            color: white;
+            border: none;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        .heart-button:hover {
+            background-color: #b02a5b;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +108,7 @@
     </div>
 
     <button id="apply">套用</button>
+    <button id="heartButton" class="heart-button">♥ 收藏背景</button>
     <div id="currentImage" class="current-image">目前背景：載入中...</div>
 
     <script src="popup.js"></script>
