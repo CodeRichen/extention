@@ -40,6 +40,12 @@ async function setCustomStyles(settings) {
 
   // 如果關閉背景與所有樣式，自動還原為預設字體與樣式
 if (!settings.enableBackground) {
+  // 移除背景影片（如果存在）
+  const existingVideo = document.getElementById('custom-bg-video');
+  if (existingVideo) {
+    existingVideo.remove();
+  }
+  
   style.textContent = `
     /* 還原背景 */
     body {
@@ -134,38 +140,307 @@ if (settings.enableFontColor) {
     }
   `;
 
-  // 背景圖片設置
+  // 背景設置（圖片或影片）
   if (applyToAll || isAIPage) {
     const folder = settings.imageFolder || defaultSettings.imageFolder;
     
     // 載入圖片列表
     const imageList = await loadImageList();
     
-    if (imageList && imageList[folder] && imageList[folder].images) {
+    if (imageList && imageList[folder]) {
+      let mediaFiles;
+      
+      // 檢查是否為影片資料夾
+      if (folder === 'videos') {
+        mediaFiles = imageList[folder].videos;
+      } else {
+        mediaFiles = imageList[folder].images;
+      }
+      
       // 處理 PowerShell 產生的結構 (可能是陣列或物件)
-      let images = imageList[folder].images;
-      if (images.value && Array.isArray(images.value)) {
+      if (mediaFiles && mediaFiles.value && Array.isArray(mediaFiles.value)) {
         // PowerShell 物件結構: { value: [], Count: number }
-        images = images.value;
-      } else if (!Array.isArray(images)) {
+        mediaFiles = mediaFiles.value;
+      } else if (!Array.isArray(mediaFiles)) {
         // 如果不是陣列也沒有 value,則跳過
-        console.error('圖片列表格式錯誤');
+        console.error('媒體檔案列表格式錯誤');
         return;
       }
       
-      if (images.length > 0) {
-        const randomIndex = Math.floor(Math.random() * images.length);
-        const randomImage = images[randomIndex];
+      if (mediaFiles && mediaFiles.length > 0) {
+        // 智能選擇：優先選擇MP4文件，如果沒有MP4再選擇MOV
+        const mp4Videos = mediaFiles.filter(file => file.endsWith('.mp4'));
+        const movVideos = mediaFiles.filter(file => file.endsWith('.mov'));
         
-        cssRules += `
-          body {
-            background-image: url('chrome-extension://${chrome.runtime.id}/${folder}/${randomImage}') !important;
-            background-size: cover !important;
-            background-position: center !important;
-            background-repeat: no-repeat !important;
+        let randomMedia;
+        if (mp4Videos.length > 0) {
+          // 優先選擇MP4文件
+          randomMedia = mp4Videos[Math.floor(Math.random() * mp4Videos.length)];
+          console.log('✅ 選擇MP4文件:', randomMedia);
+        } else if (movVideos.length > 0) {
+          // 如果沒有MP4，選擇MOV文件
+          randomMedia = movVideos[Math.floor(Math.random() * movVideos.length)];  
+          console.log('⚠️ 選擇MOV文件（兼容性可能有限）:', randomMedia);
+        } else {
+          console.error('❌ 找不到支援的影片格式');
+          return;
+        }
+        
+        console.log('選中的媒體檔案:', randomMedia, '資料夾:', folder);
+        
+        if (folder === 'videos') {
+          // 移除現有的背景影片元素（如果存在）
+          const existingVideo = document.getElementById('custom-bg-video');
+          if (existingVideo) {
+            existingVideo.remove();
           }
-        `;
-        chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomImage}` });
+          
+          console.log('🎬 開始載入影片背景');
+          console.log('📁 影片資料夾:', folder);
+          console.log('🎞️ 選中的影片:', randomMedia);
+          console.log('📋 完整媒體列表:', mediaFiles);
+          
+          // 創建影片背景元素
+          const video = document.createElement('video');
+          video.id = 'custom-bg-video';
+          const videoUrl = chrome.runtime.getURL(`deptop.mp4/${randomMedia}`);
+          console.log('🔗 影片URL:', videoUrl);
+          
+          // 設置影片屬性
+          video.src = videoUrl;
+          video.autoplay = true;
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.preload = 'metadata';
+          video.controls = false;
+          
+          // 檢查文件格式並設置 MIME type
+          const fileExtension = randomMedia.split('.').pop().toLowerCase();
+          console.log('🎞️ 文件擴展名:', fileExtension);
+          
+          if (fileExtension === 'mov') {
+            console.log('⚠️ MOV格式檢測到，Chrome支援可能有限');
+            video.setAttribute('type', 'video/quicktime');
+          } else if (fileExtension === 'mp4') {
+            video.setAttribute('type', 'video/mp4');
+          }
+          
+          // 正式版本：影片作為背景
+          video.controls = false;
+          
+          video.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            z-index: -1000 !important;
+            pointer-events: none !important;
+          `;
+          
+          // 詳細的事件監聽器
+          video.addEventListener('loadstart', () => {
+            console.log('✅ 影片開始載入:', randomMedia);
+          });
+          
+          video.addEventListener('loadedmetadata', () => {
+            console.log('✅ 影片元資料已載入:', randomMedia, `分辨率: ${video.videoWidth}x${video.videoHeight}`);
+            
+            // 檢查MOV文件是否載入了有效的視頻數據
+            if (randomMedia.endsWith('.mov') && (video.videoWidth === 0 || video.videoHeight === 0)) {
+              console.error('❌ MOV文件分辨率為0，可能載入失敗，嘗試切換到MP4');
+              tryFallbackToMp4();
+              return;
+            }
+          });
+          
+          video.addEventListener('loadeddata', () => {
+            console.log('✅ 影片數據已載入:', randomMedia);
+            video.play().then(() => {
+              console.log('✅ 影片播放成功!');
+            }).catch(e => {
+              console.error('❌ 影片播放失敗:', e);
+              // 如果自動播放失敗，退回到圖片背景
+              console.log('🔄 退回到Miku圖片背景');
+              video.remove();
+              
+              // 設置Miku圖片背景作為備選
+              const imageList2 = imageListCache;
+              if (imageList2 && imageList2.miku && imageList2.miku.images) {
+                const mikuImages = imageList2.miku.images;
+                const randomMikuImage = mikuImages[Math.floor(Math.random() * mikuImages.length)];
+                document.body.style.backgroundImage = `url('chrome-extension://${chrome.runtime.id}/miku/${randomMikuImage}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                chrome.storage.sync.set({ currentBackgroundName: `miku/${randomMikuImage} (影片備選)` });
+              }
+            });
+          });
+          
+          video.addEventListener('canplay', () => {
+            console.log('✅ 影片可以播放:', randomMedia);
+          });
+          
+          video.addEventListener('canplaythrough', () => {
+            console.log('✅ 影片可以流暢播放:', randomMedia);
+            
+            // MOV文件需要額外檢查實際播放情況
+            if (randomMedia.endsWith('.mov')) {
+              setTimeout(() => {
+                if (video.currentTime === 0 && !video.paused) {
+                  console.error('❌ MOV文件無法正常播放，切換到MP4');
+                  tryFallbackToMp4();
+                }
+              }, 3000); // 等待3秒檢查是否真正開始播放
+            }
+          });
+          
+          video.addEventListener('error', (e) => {
+            console.error('❌ 影片載入錯誤:', e);
+            console.error('❌ 錯誤詳情:', video.error);
+            console.log('🔄 嘗試退回到其他影片或圖片背景');
+            
+            // 如果是MOV文件出錯，嘗試找MP4文件
+            if (randomMedia.endsWith('.mov')) {
+              console.log('⚠️ MOV文件播放失敗，嘗試查找MP4文件');
+              const mp4Videos = mediaFiles.filter(file => file.endsWith('.mp4'));
+              if (mp4Videos.length > 0) {
+                const randomMp4 = mp4Videos[Math.floor(Math.random() * mp4Videos.length)];
+                console.log('🔄 切換到MP4文件:', randomMp4);
+                video.src = chrome.runtime.getURL(`deptop.mp4/${randomMp4}`);
+                return; // 不移除影片元素，嘗試新的MP4文件
+              }
+            }
+            
+            // 完全失敗，移除影片元素並退回到圖片背景
+            video.remove();
+            console.log('🔄 退回到Miku圖片背景');
+            const imageList2 = imageListCache;
+            if (imageList2 && imageList2.miku && imageList2.miku.images) {
+              const mikuImages = imageList2.miku.images;
+              const randomMikuImage = mikuImages[Math.floor(Math.random() * mikuImages.length)];
+              document.body.style.backgroundImage = `url('chrome-extension://${chrome.runtime.id}/miku/${randomMikuImage}')`;
+              document.body.style.backgroundSize = 'cover';
+              document.body.style.backgroundPosition = 'center';
+              document.body.style.backgroundRepeat = 'no-repeat';
+              chrome.storage.sync.set({ currentBackgroundName: `miku/${randomMikuImage} (影片載入失敗，退回圖片)` });
+            }
+          });
+          
+          video.addEventListener('stalled', () => {
+            console.warn('⚠️ 影片載入停滯:', randomMedia);
+          });
+          
+          video.addEventListener('waiting', () => {
+            console.warn('⚠️ 影片載入等待中:', randomMedia);
+          });
+          
+          // 添加MOV格式的回退函數
+          function tryFallbackToMp4() {
+            if (randomMedia.endsWith('.mov')) {
+              console.log('🔄 嘗試切換到MP4格式...');
+              const mp4Videos = mediaFiles.filter(file => file.endsWith('.mp4'));
+              if (mp4Videos.length > 0) {
+                const randomMp4 = mp4Videos[Math.floor(Math.random() * mp4Videos.length)];
+                console.log('🎯 切換到MP4文件:', randomMp4);
+                
+                // 移除當前的MOV視頻元素
+                if (video.parentNode) {
+                  video.parentNode.removeChild(video);
+                }
+                
+                // 直接更換視頻源為MP4
+                window.setTimeout(() => {
+                  console.log('🔄 重新載入MP4影片:', randomMp4);
+                  const newVideo = document.createElement('video');
+                  newVideo.id = 'custom-bg-video';
+                  const newVideoUrl = chrome.runtime.getURL(`deptop.mp4/${randomMp4}`);
+                  
+                  // 設置新影片屬性
+                  newVideo.src = newVideoUrl;
+                  newVideo.autoplay = true;
+                  newVideo.muted = true;
+                  newVideo.loop = true;
+                  newVideo.playsInline = true;
+                  newVideo.preload = 'metadata';
+                  newVideo.controls = false;
+                  newVideo.setAttribute('type', 'video/mp4');
+                  
+                  // 設置樣式
+                  newVideo.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    z-index: -9999 !important;
+                    pointer-events: none !important;
+                  `;
+                  
+                  // 簡化的事件監聽器
+                  newVideo.addEventListener('canplay', () => {
+                    console.log('✅ MP4影片載入成功:', randomMp4);
+                    newVideo.play().catch(e => console.error('❌ MP4播放失敗:', e));
+                  });
+                  
+                  newVideo.addEventListener('error', () => {
+                    console.error('❌ MP4也載入失敗，回退到圖片背景');
+                    newVideo.remove();
+                    loadFallbackImageBackground();
+                  });
+                  
+                  // 插入新影片
+                  document.body.insertBefore(newVideo, document.body.firstChild);
+                  chrome.storage.sync.set({ currentBackgroundName: `videos/${randomMp4} (MP4回退)` });
+                }, 100);
+              } else {
+                console.log('❌ 沒有可用的MP4文件，回退到圖片背景');
+                video.remove();
+                loadFallbackImageBackground();
+              }
+            }
+          }
+          
+          function loadFallbackImageBackground() {
+            const imageList2 = imageListCache;
+            if (imageList2 && imageList2.miku && imageList2.miku.images) {
+              const mikuImages = imageList2.miku.images;
+              const randomMikuImage = mikuImages[Math.floor(Math.random() * mikuImages.length)];
+              document.body.style.backgroundImage = `url('chrome-extension://${chrome.runtime.id}/miku/${randomMikuImage}')`;
+              document.body.style.backgroundSize = 'cover';
+              document.body.style.backgroundPosition = 'center';
+              document.body.style.backgroundRepeat = 'no-repeat';
+              chrome.storage.sync.set({ currentBackgroundName: `miku/${randomMikuImage} (MOV失敗回退)` });
+            }
+          }
+          
+          // 將影片插入到 body 的最前面
+          document.body.insertBefore(video, document.body.firstChild);
+          console.log('✅ 影片元素已插入DOM');
+          
+          chrome.storage.sync.set({ currentBackgroundName: `videos/${randomMedia}` });
+        } else {
+          // 移除影片背景（如果存在）
+          const existingVideo = document.getElementById('custom-bg-video');
+          if (existingVideo) {
+            existingVideo.remove();
+          }
+          
+          // 設置圖片背景
+          cssRules += `
+            body {
+              background-image: url('chrome-extension://${chrome.runtime.id}/${folder}/${randomMedia}') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+            }
+          `;
+          chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomMedia}` });
+        }
       }
     }
     
