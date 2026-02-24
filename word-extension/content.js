@@ -168,22 +168,18 @@ if (settings.enableFontColor) {
       }
       
       if (mediaFiles && mediaFiles.length > 0) {
-        // 智能選擇：優先選擇MP4文件，如果沒有MP4再選擇MOV
-        const mp4Videos = mediaFiles.filter(file => file.endsWith('.mp4'));
-        const movVideos = mediaFiles.filter(file => file.endsWith('.mov'));
-        
         let randomMedia;
-        if (mp4Videos.length > 0) {
-          // 優先選擇MP4文件
-          randomMedia = mp4Videos[Math.floor(Math.random() * mp4Videos.length)];
-          console.log('✅ 選擇MP4文件:', randomMedia);
-        } else if (movVideos.length > 0) {
-          // 如果沒有MP4，選擇MOV文件
-          randomMedia = movVideos[Math.floor(Math.random() * movVideos.length)];  
-          console.log('⚠️ 選擇MOV文件（兼容性可能有限）:', randomMedia);
+        
+        if (folder === 'videos') {
+          // 影片資料夾：優先選擇MP4
+          const mp4Videos = mediaFiles.filter(file => file.toLowerCase().endsWith('.mp4'));
+          const allVideos = mp4Videos.length > 0 ? mp4Videos : mediaFiles;
+          randomMedia = allVideos[Math.floor(Math.random() * allVideos.length)];
+          console.log('✅ 選擇影片:', randomMedia);
         } else {
-          console.error('❌ 找不到支援的影片格式');
-          return;
+          // 圖片資料夾：直接隨機選取
+          randomMedia = mediaFiles[Math.floor(Math.random() * mediaFiles.length)];
+          console.log('✅ 選擇圖片:', randomMedia);
         }
         
         console.log('選中的媒體檔案:', randomMedia, '資料夾:', folder);
@@ -421,6 +417,22 @@ if (settings.enableFontColor) {
           // 將影片插入到 body 的最前面
           document.body.insertBefore(video, document.body.firstChild);
           console.log('✅ 影片元素已插入DOM');
+          
+          // GPT/OpenAI 頁面需要讓根元素透明，否則影片被遮住
+          if (isGPTPage) {
+            cssRules += `git rm --cached "word-extension/deptop.mp4/*" -r
+              body,
+              #__next,
+              #__next > div,
+              .flex.h-full.flex-col,
+              main,
+              [class*="react-scroll"],
+              .overflow-hidden,
+              .h-full {
+                background-color: transparent !important;
+              }
+            `;
+          }
           
           chrome.storage.sync.set({ currentBackgroundName: `videos/${randomMedia}` });
         } else {
