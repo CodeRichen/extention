@@ -1,6 +1,23 @@
 const style = document.createElement('style'); 
 document.head.appendChild(style);
 
+// 判斷是否為影片資料夾
+function isVideoFolder(folder) {
+  return ['videos', 'videos_anime', 'videos_catgril', 'videos_miku', 'videos_view'].includes(folder);
+}
+
+// 取得影片在 deptop.mp4 的子路徑
+function getVideoDirPath(folder) {
+  const map = {
+    'videos':        'deptop.mp4',
+    'videos_anime':  'deptop.mp4/anime',
+    'videos_catgril':'deptop.mp4/catgril',
+    'videos_miku':   'deptop.mp4/miku',
+    'videos_view':   'deptop.mp4/view'
+  };
+  return map[folder] || 'deptop.mp4';
+}
+
 // 定義默認設置
 const defaultSettings = {
   fontFamily: '微軟正黑體',
@@ -44,6 +61,11 @@ if (!settings.enableBackground) {
   const existingVideo = document.getElementById('custom-bg-video');
   if (existingVideo) {
     existingVideo.remove();
+  }
+  // 移除暴色遺罩
+  const existingOverlay = document.getElementById('custom-bg-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
   }
   
   style.textContent = `
@@ -151,7 +173,7 @@ if (settings.enableFontColor) {
       let mediaFiles;
       
       // 檢查是否為影片資料夾
-      if (folder === 'videos') {
+      if (isVideoFolder(folder)) {
         mediaFiles = imageList[folder].videos;
       } else {
         mediaFiles = imageList[folder].images;
@@ -170,7 +192,7 @@ if (settings.enableFontColor) {
       if (mediaFiles && mediaFiles.length > 0) {
         let randomMedia;
         
-        if (folder === 'videos') {
+        if (isVideoFolder(folder)) {
           // 影片資料夾：優先選擇MP4
           const mp4Videos = mediaFiles.filter(file => file.toLowerCase().endsWith('.mp4'));
           const allVideos = mp4Videos.length > 0 ? mp4Videos : mediaFiles;
@@ -184,22 +206,23 @@ if (settings.enableFontColor) {
         
         console.log('選中的媒體檔案:', randomMedia, '資料夾:', folder);
         
-        if (folder === 'videos') {
+        if (isVideoFolder(folder)) {
           // 移除現有的背景影片元素（如果存在）
           const existingVideo = document.getElementById('custom-bg-video');
           if (existingVideo) {
             existingVideo.remove();
           }
           
+          const videoDirPath = getVideoDirPath(folder);
           console.log('🎬 開始載入影片背景');
-          console.log('📁 影片資料夾:', folder);
+          console.log('📁 影片資料夾:', videoDirPath);
           console.log('🎞️ 選中的影片:', randomMedia);
           console.log('📋 完整媒體列表:', mediaFiles);
           
           // 創建影片背景元素
           const video = document.createElement('video');
           video.id = 'custom-bg-video';
-          const videoUrl = chrome.runtime.getURL(`deptop.mp4/${randomMedia}`);
+          const videoUrl = chrome.runtime.getURL(`${videoDirPath}/${randomMedia}`);
           console.log('🔗 影片URL:', videoUrl);
           
           // 設置影片屬性
@@ -306,7 +329,7 @@ if (settings.enableFontColor) {
               if (mp4Videos.length > 0) {
                 const randomMp4 = mp4Videos[Math.floor(Math.random() * mp4Videos.length)];
                 console.log('🔄 切換到MP4文件:', randomMp4);
-                video.src = chrome.runtime.getURL(`deptop.mp4/${randomMp4}`);
+                video.src = chrome.runtime.getURL(`${videoDirPath}/${randomMp4}`);
                 return; // 不移除影片元素，嘗試新的MP4文件
               }
             }
@@ -353,7 +376,7 @@ if (settings.enableFontColor) {
                   console.log('🔄 重新載入MP4影片:', randomMp4);
                   const newVideo = document.createElement('video');
                   newVideo.id = 'custom-bg-video';
-                  const newVideoUrl = chrome.runtime.getURL(`deptop.mp4/${randomMp4}`);
+                  const newVideoUrl = chrome.runtime.getURL(`${videoDirPath}/${randomMp4}`);
                   
                   // 設置新影片屬性
                   newVideo.src = newVideoUrl;
@@ -391,7 +414,7 @@ if (settings.enableFontColor) {
                   
                   // 插入新影片
                   document.body.insertBefore(newVideo, document.body.firstChild);
-                  chrome.storage.sync.set({ currentBackgroundName: `videos/${randomMp4} (MP4回退)` });
+                  chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomMp4} (MP4回退)` });
                 }, 100);
               } else {
                 console.log('❌ 沒有可用的MP4文件，回退到圖片背景');
@@ -417,10 +440,29 @@ if (settings.enableFontColor) {
           // 將影片插入到 body 的最前面
           document.body.insertBefore(video, document.body.firstChild);
           console.log('✅ 影片元素已插入DOM');
+
+          // 新增暴色遺罩層（模擬 video::after dark overlay）
+          let overlay = document.getElementById('custom-bg-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'custom-bg-overlay';
+          }
+          overlay.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0,0,0,0.35) !important;
+            z-index: -999 !important;
+            pointer-events: none !important;
+          `;
+          document.body.appendChild(overlay);
+          console.log('✅ 暴色遺罩層已加入');
           
           // GPT/OpenAI 頁面需要讓根元素透明，否則影片被遮住
           if (isGPTPage) {
-            cssRules += `git rm --cached "word-extension/deptop.mp4/*" -r
+            cssRules += `
               body,
               #__next,
               #__next > div,
@@ -434,7 +476,7 @@ if (settings.enableFontColor) {
             `;
           }
           
-          chrome.storage.sync.set({ currentBackgroundName: `videos/${randomMedia}` });
+          chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomMedia}` });
         } else {
           // 移除影片背景（如果存在）
           const existingVideo = document.getElementById('custom-bg-video');

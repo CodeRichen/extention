@@ -23,7 +23,15 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["miku/*", "pho/*", "beauty/*", "deptop.mp4/*", "image-list.json"],
+      "resources": [
+        "miku/*", "pho/*", "beauty/*",
+        "deptop.mp4/*",
+        "deptop.mp4/anime/*",
+        "deptop.mp4/catgril/*",
+        "deptop.mp4/miku/*",
+        "deptop.mp4/view/*",
+        "image-list.json"
+      ],
       "matches": ["<all_urls>"]
     }
   ]
