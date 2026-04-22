@@ -18,6 +18,19 @@ function getVideoDirPath(folder) {
   return map[folder] || 'deptop.mp4';
 }
 
+// 兼容舊設定值，避免抓不到清單導致背景沿用舊內容
+function normalizeFolderSelection(folder) {
+  if (folder === 'videos') return 'videos_miku';
+  return folder;
+}
+
+function clearInlineBackground() {
+  document.body.style.backgroundImage = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundPosition = '';
+  document.body.style.backgroundRepeat = '';
+}
+
 // 定義默認設置
 const defaultSettings = {
   fontFamily: '微軟正黑體',
@@ -67,6 +80,7 @@ if (!settings.enableBackground) {
   if (existingOverlay) {
     existingOverlay.remove();
   }
+  clearInlineBackground();
   
   style.textContent = `
     /* 還原背景 */
@@ -91,6 +105,17 @@ if (!settings.enableBackground) {
 
 
   // ----------- 以下是開啟背景時的處理 --------------
+
+  // 若設定為「僅 AI 網頁」且目前不是 AI 頁面，完全不套用任何樣式
+  if (!applyToAll && !isAIPage) {
+    const existingVideo = document.getElementById('custom-bg-video');
+    if (existingVideo) existingVideo.remove();
+    const existingOverlay = document.getElementById('custom-bg-overlay');
+    if (existingOverlay) existingOverlay.remove();
+    clearInlineBackground();
+    style.textContent = '';
+    return;
+  }
 
 // 套用文字顏色（如果開啟了）
 if (settings.enableFontColor) {
@@ -164,7 +189,7 @@ if (settings.enableFontColor) {
 
   // 背景設置（圖片或影片）
   if (applyToAll || isAIPage) {
-    const folder = settings.imageFolder || defaultSettings.imageFolder;
+    const folder = normalizeFolderSelection(settings.imageFolder || defaultSettings.imageFolder);
     
     // 載入圖片列表
     const imageList = await loadImageList();
@@ -482,6 +507,10 @@ if (settings.enableFontColor) {
           const existingVideo = document.getElementById('custom-bg-video');
           if (existingVideo) {
             existingVideo.remove();
+          }
+          const existingOverlay = document.getElementById('custom-bg-overlay');
+          if (existingOverlay) {
+            existingOverlay.remove();
           }
           
           // 設置圖片背景
