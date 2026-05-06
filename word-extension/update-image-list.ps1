@@ -27,13 +27,16 @@ if (Test-Path $phoPath) {
 }
 
 # Scan beauty folder
-$beautyPath = Join-Path $scriptPath "beauty"
+$beautyPath = "D:\beauty"
+if (-not (Test-Path $beautyPath)) {
+    $beautyPath = Join-Path $scriptPath "beauty"
+}
 if (Test-Path $beautyPath) {
     $beautyImages = Get-ChildItem $beautyPath -Filter "*.jpg" | Select-Object -ExpandProperty Name | Sort-Object
-    Write-Host "Found $($beautyImages.Count) beauty images" -ForegroundColor Green
+    Write-Host "Found $($beautyImages.Count) beauty images from $beautyPath" -ForegroundColor Green
 } else {
     $beautyImages = @()
-    Write-Host "Warning: beauty folder not found" -ForegroundColor Yellow
+    Write-Host "Warning: beauty folder not found at D:\beauty or $scriptPath\beauty" -ForegroundColor Yellow
 }
 
 # Scan deptop.mp4 subfolder: anime

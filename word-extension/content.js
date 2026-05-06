@@ -37,10 +37,42 @@ function normalizeFolderSelection(folder) {
 }
 
 function clearInlineBackground() {
+  document.documentElement.style.backgroundImage = '';
+  document.documentElement.style.backgroundSize = '';
+  document.documentElement.style.backgroundPosition = '';
+  document.documentElement.style.backgroundRepeat = '';
+  document.documentElement.style.backgroundColor = '';
   document.body.style.backgroundImage = '';
   document.body.style.backgroundSize = '';
   document.body.style.backgroundPosition = '';
   document.body.style.backgroundRepeat = '';
+  document.body.style.backgroundColor = '';
+}
+
+function removeBackgroundOverlay() {
+  const existingOverlay = document.getElementById('custom-bg-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+}
+
+function applyBackgroundOverlay() {
+  let overlay = document.getElementById('custom-bg-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'custom-bg-overlay';
+  }
+  overlay.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.62) !important;
+    z-index: -999 !important;
+    pointer-events: none !important;
+  `;
+  document.body.appendChild(overlay);
 }
 
 // 定義默認設置
@@ -88,10 +120,7 @@ if (!settings.enableBackground) {
     existingVideo.remove();
   }
   // 移除暴色遺罩
-  const existingOverlay = document.getElementById('custom-bg-overlay');
-  if (existingOverlay) {
-    existingOverlay.remove();
-  }
+  removeBackgroundOverlay();
   clearInlineBackground();
   
   style.textContent = `
@@ -122,8 +151,7 @@ if (!settings.enableBackground) {
   if (!applyToAll && !isAIPage) {
     const existingVideo = document.getElementById('custom-bg-video');
     if (existingVideo) existingVideo.remove();
-    const existingOverlay = document.getElementById('custom-bg-overlay');
-    if (existingOverlay) existingOverlay.remove();
+    removeBackgroundOverlay();
     clearInlineBackground();
     style.textContent = '';
     return;
@@ -198,6 +226,29 @@ if (settings.enableFontColor) {
       background-color: ${settings.selectionColor || defaultSettings.selectionColor} !important;
     }
   `;
+
+  if (isGPTPage) {
+    cssRules += `
+      html,
+      body,
+      #root,
+      #__next,
+      #__next > div,
+      #__next main,
+      main,
+      .flex.h-full.flex-col,
+      [class*="react-scroll"],
+      .overflow-hidden,
+      [data-testid="conversation-turns"],
+      [data-testid="conversation-turn"],
+      [data-testid="chat-container"],
+      [data-testid="main"],
+      [data-message-author-role],
+      .h-full {
+        background: transparent !important;
+      }
+    `;
+  }
 
   // 背景設置（圖片或影片）
   if (applyToAll || isAIPage) {
@@ -395,10 +446,7 @@ if (settings.enableFontColor) {
               video.parentNode.removeChild(video);
             }
 
-            const overlay = document.getElementById('custom-bg-overlay');
-            if (overlay) {
-              overlay.remove();
-            }
+            removeBackgroundOverlay();
 
             if (fallbackImages.length > 0) {
               const randomImage = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
@@ -407,6 +455,11 @@ if (settings.enableFontColor) {
               document.body.style.backgroundSize = 'cover';
               document.body.style.backgroundPosition = 'center';
               document.body.style.backgroundRepeat = 'no-repeat';
+              if (finalFolder === 'beauty') {
+                applyBackgroundOverlay();
+              } else {
+                removeBackgroundOverlay();
+              }
               chrome.storage.sync.set({ currentBackgroundName: `${finalFolder}/${randomImage} (影片重試失敗回退)` });
             }
           }
@@ -416,40 +469,10 @@ if (settings.enableFontColor) {
           console.log('✅ 影片元素已插入DOM');
 
           // 新增暴色遺罩層（模擬 video::after dark overlay）
-          let overlay = document.getElementById('custom-bg-overlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'custom-bg-overlay';
-          }
-          overlay.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: rgba(0,0,0,0.35) !important;
-            z-index: -999 !important;
-            pointer-events: none !important;
-          `;
-          document.body.appendChild(overlay);
+          applyBackgroundOverlay();
           console.log('✅ 暴色遺罩層已加入');
           
           // GPT/OpenAI 頁面需要讓根元素透明，否則影片被遮住
-          if (isGPTPage) {
-            cssRules += `
-              body,
-              #__next,
-              #__next > div,
-              .flex.h-full.flex-col,
-              main,
-              [class*="react-scroll"],
-              .overflow-hidden,
-              .h-full {
-                background-color: transparent !important;
-              }
-            `;
-          }
-          
           chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomMedia}` });
         } else {
           // 移除影片背景（如果存在）
@@ -457,10 +480,7 @@ if (settings.enableFontColor) {
           if (existingVideo) {
             existingVideo.remove();
           }
-          const existingOverlay = document.getElementById('custom-bg-overlay');
-          if (existingOverlay) {
-            existingOverlay.remove();
-          }
+          removeBackgroundOverlay();
           
           // 設置圖片背景
           cssRules += `
@@ -471,6 +491,9 @@ if (settings.enableFontColor) {
               background-repeat: no-repeat !important;
             }
           `;
+          if (folder === 'beauty') {
+            applyBackgroundOverlay();
+          }
           chrome.storage.sync.set({ currentBackgroundName: `${folder}/${randomMedia}` });
         }
       }
